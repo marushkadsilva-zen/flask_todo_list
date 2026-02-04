@@ -1,12 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
 from datetime import datetime
 
 app = Flask(__name__)
-DATABASE = "todo.db"
+app.secret_key = "todo-secret-key"
 
-recently_added = ""
-recently_deleted = ""
+DATABASE = "todo.db"
 
 
 # ---------- DB HELPERS ----------
@@ -54,7 +53,8 @@ def log_history(title, action):
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    global recently_added
+    if "user" not in session:
+        return redirect(url_for("login"))
 
     conn = get_db()
 
@@ -65,7 +65,7 @@ def index():
             conn.execute("INSERT INTO tasks (title) VALUES (?)", (task,))
             conn.commit()
 
-            recently_added = task
+            session["recently_added"] = task
             log_history(task, "ADDED")
 
         conn.close()
@@ -78,19 +78,22 @@ def index():
         "index.html",
         tasks=tasks,
         total_tasks=len(tasks),
-        recently_added=recently_added,
-        recently_deleted=recently_deleted
+        recently_added=session.get("recently_added"),
+        recently_deleted=session.get("recently_deleted"),
+        username=session.get("user")
     )
 
 
 @app.route("/update/<int:id>", methods=["POST"])
 def update_task(id):
-    global recently_added, recently_deleted
+    if "user" not in session:
+        return redirect(url_for("login"))
 
     updated_task = request.form.get("updated_task")
 
     if updated_task:
         conn = get_db()
+
         old_task = conn.execute(
             "SELECT title FROM tasks WHERE id = ?", (id,)
         ).fetchone()
@@ -104,8 +107,8 @@ def update_task(id):
             )
             conn.commit()
 
-            recently_deleted = old_title
-            recently_added = updated_task
+            session["recently_deleted"] = old_title
+            session["recently_added"] = updated_task
 
             log_history(old_title, "UPDATED_OLD")
             log_history(updated_task, "UPDATED_NEW")
@@ -117,7 +120,8 @@ def update_task(id):
 
 @app.route("/delete/<int:id>")
 def delete_task(id):
-    global recently_deleted
+    if "user" not in session:
+        return redirect(url_for("login"))
 
     conn = get_db()
     task = conn.execute(
@@ -130,28 +134,48 @@ def delete_task(id):
         conn.execute("DELETE FROM tasks WHERE id = ?", (id,))
         conn.commit()
 
-        recently_deleted = title
+        session["recently_deleted"] = title
         log_history(title, "DELETED")
 
     conn.close()
     return redirect(url_for("index"))
 
+
 @app.route("/history")
 def history():
-    conn = get_db()
+    if "user" not in session:
+        return redirect(url_for("login"))
 
+    conn = get_db()
     history_data = conn.execute(
         "SELECT * FROM task_history ORDER BY id DESC"
     ).fetchall()
-
     conn.close()
 
-    return render_template(
-        "history.html",
-        history=history_data
-    )
+    return render_template("history.html", history=history_data)
 
 
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username")
+
+        if username:
+            session["user"] = username
+            session["recently_added"] = ""
+            session["recently_deleted"] = ""
+            return redirect(url_for("index"))
+
+    return render_template("login.html")
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
+
+# ---------- MAIN ----------
 
 if __name__ == "__main__":
     init_db()
