@@ -40,14 +40,14 @@
 
         <div class="badge">{{ loop.index }}</div>
 
-        <span>{{ task }}</span>
+        <span>{{ task["title"]}}</span>
 
-        <form method="POST" action="/update/{{ loop.index0 }}">
+        <form method="POST" action="/update/{{ task.id }}">
             <input type="text" name="updated_task" placeholder="Edit">
             <button class="update-btn" type="submit">Save</button>
         </form>
 
-        <a href="/delete/{{ loop.index0 }}">
+        <a href="/delete/{{ task.id }}">
             <button class="delete-btn">Delete</button>
         </a>
     </div>
