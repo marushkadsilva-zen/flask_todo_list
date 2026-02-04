@@ -136,6 +136,22 @@ def delete_task(id):
     conn.close()
     return redirect(url_for("index"))
 
+@app.route("/history")
+def history():
+    conn = get_db()
+
+    history_data = conn.execute(
+        "SELECT * FROM task_history ORDER BY id DESC"
+    ).fetchall()
+
+    conn.close()
+
+    return render_template(
+        "history.html",
+        history=history_data
+    )
+
+
 
 if __name__ == "__main__":
     init_db()
