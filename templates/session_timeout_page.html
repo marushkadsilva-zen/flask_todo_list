@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Session Timeout</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+    <h1>⏳ Session Expired</h1>
+    <p>Your session has timed out due to inactivity.</p>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <p style="color:red;">{{ messages[0] }}</p>
+        {% endif %}
+    {% endwith %}
+
+    <a href="/login">
+        <button class="add-btn">Login Again</button>
+    </a>
+</div>
+
+</body>
+</html>

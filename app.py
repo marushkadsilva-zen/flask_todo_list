@@ -1,12 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.secret_key = "todo-secret-key"
 
 DATABASE = "todo.db"
-
 
 # ---------- DB HELPERS ----------
 
@@ -48,6 +47,28 @@ def log_history(title, action):
     conn.commit()
     conn.close()
 
+# ---------- SESSION TIMEOUT (ONLY ONE) ----------
+
+@app.before_request
+def session_timeout():
+    # pages that should NOT trigger timeout
+    if request.endpoint in ("login", "static", "session_timeout_page"):
+        return
+
+    if "user" in session:
+        now = datetime.now().timestamp()
+
+        # If last activity exists and user was idle too long
+        if "last_activity" in session:
+            idle_time = now - session["last_activity"]
+
+            if idle_time > 10:  # 10 seconds for testing
+                flash("Session timed out due to inactivity. Please login again.")
+                session.clear()
+                return redirect(url_for("session_timeout_page"))
+
+        # IMPORTANT: update activity time on every request
+        session["last_activity"] = now
 
 # ---------- ROUTES ----------
 
@@ -93,7 +114,6 @@ def update_task(id):
 
     if updated_task:
         conn = get_db()
-
         old_task = conn.execute(
             "SELECT title FROM tasks WHERE id = ?", (id,)
         ).fetchone()
@@ -130,7 +150,6 @@ def delete_task(id):
 
     if task:
         title = task["title"]
-
         conn.execute("DELETE FROM tasks WHERE id = ?", (id,))
         conn.commit()
 
@@ -162,6 +181,7 @@ def login():
 
         if username:
             session["user"] = username
+            session["last_activity"] = datetime.now().timestamp()  # ✅ FIXED KEY
             session["recently_added"] = ""
             session["recently_deleted"] = ""
             return redirect(url_for("index"))
@@ -173,6 +193,11 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for("login"))
+
+
+@app.route("/session-timeout")
+def session_timeout_page():
+    return render_template("session_timeout_page.html")
 
 
 # ---------- MAIN ----------
