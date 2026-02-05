@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>To-Do App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+    <h1>Task Manager</h1>
+    <p style="text-align:center;">
+    Welcome, <strong>{{ username }}</strong> |
+    <a href="/logout">Logout</a>
+</p>
+
+    <p class="subtitle">Flask-based To-Do Application</p>
+
+    <!-- Add Task -->
+    <form method="POST" class="add-form">
+        <input type="text" name="task" placeholder="Add a new task..." required>
+        <button class="add-btn" type="submit">Add Task</button>
+    </form>
+    <a href="/history">
+    <button class="add-btn">View History</button>
+</a>
+
+
+    <!-- Stats -->
+    <div class="stats">
+        <div class="stat-box">
+            <strong>Total Tasks</strong><br>{{ total_tasks }}
+        </div>
+        <div class="stat-box">
+            <strong>Recently Added</strong><br>{{ recently_added or "—" }}
+        </div>
+        <div class="stat-box">
+            <strong>Recently Deleted</strong><br>{{ recently_deleted or "—" }}
+        </div>
+    </div>
+
+    <!-- Task List -->
+    <div class="divider"></div>
+
+<!-- Task List -->
+{% if tasks %}
+    {% for task in tasks %}
+    <div class="task">
+        <input type="checkbox">
+
+        <div class="badge">{{ loop.index }}</div>
+
+        <span>{{ task["title"]}}</span>
+
+        <form method="POST" action="/update/{{ task.id }}">
+            <input type="text" name="updated_task" placeholder="Edit">
+            <button class="update-btn" type="submit">Save</button>
+        </form>
+
+        <a href="/delete/{{ task.id }}">
+            <button class="delete-btn">Delete</button>
+        </a>
+    </div>
+    {% endfor %}
+{% else %}
+    <p class="empty">Your task list is clean  Add a task to get started.</p>
+{% endif %}
+
+    </div>
+</div>
+
+</body>
+</html>

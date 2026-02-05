@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Task History</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+    <h1> Task History</h1>
+
+    {% if history %}
+        <ul>
+            {% for item in history %}
+                <li>
+                    <strong>{{ item["action"] }}</strong> :
+                    {{ item["task_title"] }}
+                    <br>
+                    <small>{{ item["timestamp"] }}</small>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No history available.</p>
+    {% endif %}
+
+    <br>
+    <a href="/">
+        <button class="add-btn">⬅ Back to Tasks</button>
+    </a>
+</div>
+
+</body>
+</html>
