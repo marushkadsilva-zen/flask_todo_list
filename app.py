@@ -6,6 +6,7 @@ app = Flask(__name__)
 app.secret_key = "todo-secret-key"
 
 DATABASE = "todo.db"
+ALLOWED_USER="Marushka"
 
 # ---------- DB HELPERS ----------
 
@@ -179,13 +180,14 @@ def login():
     if request.method == "POST":
         username = request.form.get("username")
 
-        if username:
+        if username==ALLOWED_USER:
             session["user"] = username
             session["last_activity"] = datetime.now().timestamp()  # ✅ FIXED KEY
             session["recently_added"] = ""
             session["recently_deleted"] = ""
             return redirect(url_for("index"))
-
+        else:
+            flash("Unauthorized user. Access denied.")
     return render_template("login.html")
 
 
