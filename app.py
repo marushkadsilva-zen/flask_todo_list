@@ -1,3 +1,4 @@
+
 from flask import Flask, render_template, request, redirect, url_for, session, flash,jsonify
 import sqlite3
 from datetime import datetime, timedelta
@@ -74,6 +75,7 @@ def session_timeout():
                 return redirect(url_for("session_timeout_page"))
 
         session["last_activity"] = now
+
 
 # ---------- ROUTES ----------
 
@@ -205,6 +207,7 @@ def logout():
 def session_timeout_page():
     return render_template("session_timeout_page.html")
 
+
 # ---------- API ROUTES ----------
 
 @app.route("/api/tasks", methods=["GET"])
@@ -276,7 +279,6 @@ def api_delete_task(id):
     conn.close()
 
     return jsonify({"message": "Task deleted successfully"}), 200
-
 
 
 # ---------- MAIN ----------
